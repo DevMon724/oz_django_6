@@ -1,0 +1,71 @@
+name: Django CI
+
+on:
+  push:
+
+jobs:
+  ci:
+    runs-on: ubuntu-20.04
+    env :
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: 1234
+      DB_DATABASE: oz_django
+
+    steps:
+      #github action 이미지는 기본적으로 체크아웃 안되어있습니다.
+      #우리가 ci 에서 하고자 하는 것은 코드를 검사하는 것이기 때문에 제일 먼저 check out을 해줍니다.
+      - name: Check out the codes
+        uses: actions/checkout@v2
+
+      - name: Setup python environment # ubuntu 20에 python 3.12 가 없으므로 setup 합니다.
+        id: setup-python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.12
+
+      # 각 step 은 uses 혹은 run 둘 중 하나는 꼭 사용해야 한다.
+      # uses : 다른 사람이 만들어 놓은 것을 실행.
+      # run : 내가 임의의 스크립트 혹은 명령어를 실행.
+
+      - name: Set timezone to KST
+        run: |
+          sudo rm /etc/localtime
+          sudo ln -s /usr/share/zoneinfo/Asia/Seoul /etc/localtime
+          
+      # Start Mysql
+      # https://ovirium.com/blog/how-to-make-mysql-work-in-your-github-actions/
+      - name: Start Mysql
+        run: |  # 파이프라인은 yml 문법인데 value 를 multi-line으로 작성하고 싶을때 사용.
+          sudo systemctl start mysql
+          mysql -e "use mysql; FLUSH PRIVILEGES; ALTER USER '${{ env.DB_USER }}'@'localhost' IDENTIFIED BY '${{ env.DB_PASSWORD }}';" -uroot -proot
+          mysql -e 'CREATE DATABASE ${{ env.DB_DATABASE }};' -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }}
+
+
+      # 공식 installer 를 사용하면 poetry 실행파일이 ${HOME}/.local/bin에 생성됩니다. 따라서 그 경로대로 $GITHUB_PATH에 등록해서 바로 사용할 수 있도록 합니다.
+      - name: Install Poetry
+        run: | #공식 installer 를 사용해서 poetry 를 설치합니다. 그 다음 라인의 echo 는 $GITHUB_PATH 에 poetry 를 등록합니다.
+          curl -sSL curl -sSL https://install.python-poetry.org | python3 -
+          echo "${HOME}/.local/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies
+        run: | 
+          poetry install
+        # --check 옵션은 파일을 변경하지 않고 블랙 규칙을 준수하는지 확인만 한다.
+        # github action job 의 기본동작은
+      - name: Run black
+        run: |
+          poetry run black . --check
+
+      - name: Run isort
+        run: |
+          poetry run isort . --check --diff
+
+      - name: Run Mypy
+        run: |
+          poetry run mypy .
+
+      - name: Test python project
+        run: |
+          poetry run python manage.py test
