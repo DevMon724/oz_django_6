@@ -1,4 +1,5 @@
 from django.test import TestCase
+
 from tabom.models import User
 
 # Create your tests here.
@@ -9,6 +10,8 @@ class 의 이름은 Test 로 시작해야 합니다. (pytest 에서는 무조건
 - unit test -> 파이썬 언어 자체에 내장된 테스트 프레임워크
 - pytest -> 써드파티 라이브러리 (poetry add 로 추가해야 됩니다.) 사실상 파이썬 표준.
 """
+
+
 class TestAutoNow(TestCase):
     def test_auto_now_field_is_set_when_save(self) -> None:
         """
@@ -30,13 +33,12 @@ class TestAutoNow(TestCase):
         user = User(name="test")
 
         # when
-        user.save() #save할때 db에 insert 쿼리 요청이 날아가는 시점
+        user.save()  # save할때 db에 insert 쿼리 요청이 날아가는 시점
 
-        #then
-        #상속에 의해서 assertXXX  메소드들을 물려 받았습니다.
-        self.assertIsNotNone(user.updated_at) #user.updated_at이 None이 아님을 검증합니다.
+        # then
+        # 상속에 의해서 assertXXX  메소드들을 물려 받았습니다.
+        self.assertIsNotNone(user.updated_at)  # user.updated_at이 None이 아님을 검증합니다.
         self.assertIsNotNone(user.created_at)
 
-        def test_sample(self) -> None:
-            assert 1+1 ==2
-
+    def test_sample(self) -> None:
+        assert 1 + 1 == 2
