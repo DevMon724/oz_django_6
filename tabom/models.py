@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import UniqueConstraint
 
 # Create your models here.
 
@@ -23,3 +24,6 @@ class Article(BaseModel):
 class Like(BaseModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     article = models.ForeignKey(Article, on_delete=models.CASCADE)
+
+    class Meta:
+        constraints = [UniqueConstraint(fields=["user", "article"], name="UIX_user_id_article_id")]
