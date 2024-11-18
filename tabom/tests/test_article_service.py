@@ -1,7 +1,7 @@
 from django.test import TestCase
 
-from tabom.models import Article
-from tabom.services.article_service import get_an_article
+from tabom.models import Article, Like, User
+from tabom.services.article_service import get_an_article, get_article_list
 
 
 class TestArticleService(TestCase):
@@ -24,3 +24,20 @@ class TestArticleService(TestCase):
         # Expect
         with self.assertRaises(Article.DoesNotExist):
             get_an_article(invalid_article_id)
+
+    def test_get_article_list_should_prefetch_likes(self) -> None:
+        # Given
+        user = User.objects.create(name="user1")
+        articles = [Article.objects.create(title=f"{i}") for i in range(1, 21)]
+        Like.objects.create(user_id=user.id, article_id=articles[-1].id)
+
+        # When
+        result_articles = get_article_list(0, 10)
+
+        # Then
+        with self.assertNumQueries(2):
+
+            self.assertEqual(len(result_articles), 10)  # 길이가 10개가 맞는지 검증
+            self.assertEqual(1, result_articles[0].like_set.count())  #
+            self.assertEqual([a.id for a in reversed(articles[10:21])], [a.id for a in result_articles])
+            # assertEqual 은 순서도 비교 한다.
