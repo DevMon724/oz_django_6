@@ -1,3 +1,5 @@
+from typing import List, Any
+
 from django.db import models
 from django.db.models import UniqueConstraint
 
@@ -19,7 +21,9 @@ class User(BaseModel):
 
 class Article(BaseModel):
     title = models.CharField(max_length=255)
+    like_count = models.IntegerField(default=0) # 추가
 
+    my_likes: List[Any]  # Prefetch 에서 사용됩니다.
 
 class Like(BaseModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
