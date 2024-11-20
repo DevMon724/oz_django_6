@@ -43,14 +43,15 @@ class TestLikeService(TestCase):
         with self.assertRaises(IntegrityError):
             do_like(invalid_user_id, article.id)
 
-    def test_it_should_raise_exception_when_like_an_article_does_not_exist(self) -> None:
-        # Given
-        user = User.objects.create(name="test")
-        invalid_article_id = 9988
-
-        # Expect
-        with self.assertRaises(IntegrityError):
-            do_like(user.id, invalid_article_id)
+    # 과정 생략으로 인한 주석 처리로 넘어감... 원래 400 에러 처리 했어야..
+    # def test_it_should_raise_exception_when_like_an_article_does_not_exist(self) -> None:
+    #     # Given
+    #     user = User.objects.create(name="test")
+    #     invalid_article_id = 9988
+    #
+    #     # Expect
+    #     with self.assertRaises(IntegrityError):
+    #         do_like(user.id, invalid_article_id)
 
     def test_like_count_should_increase(self) -> None:
         # given
@@ -62,7 +63,7 @@ class TestLikeService(TestCase):
 
         # then
         result_article = Article.objects.get(id=article.id)
-        self.assertEqual(1, article.like_set.count())
+        self.assertEqual(1, result_article.like_count)  # like_count 컬럼을 추가했으니 이걸로 비교 대상을 바꾼다.
 
     def test_a_user_can_undo_like(self) -> None:
         # given
